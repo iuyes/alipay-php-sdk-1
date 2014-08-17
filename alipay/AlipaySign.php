@@ -1,5 +1,4 @@
 <?php
-namespace Org\Alipay;
 class AlipaySign {
 
     public function rsa_sign($data, $rsaPrivateKeyFilePath) {

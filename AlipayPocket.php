@@ -1,14 +1,12 @@
 <?php
 
-namespace Org\Alipay;
-
-require_once 'AopSdk.php';
-require_once 'HttpRequst.php';
+require_once './alipay/AopSdk.php';
+require_once './alipay/HttpRequst.php';
 
 /**
  * Description of AlipayPocket
  *
- * @author jinlong
+ * @author alisoso
  */
 class AlipayPocket {
 
@@ -16,6 +14,7 @@ class AlipayPocket {
 
     public function __construct() {
         $this->config = array(
+            'log_path' => "/www/web/log.txt",
             'alipay_public_key_file' => dirname(__FILE__) . "/alipay_rsa_public_key.pem",
             'merchant_private_key_file' => dirname(__FILE__) . "/rsa_private_key.pem",
             'merchant_public_key_file' => dirname(__FILE__) . "/rsa_public_key.pem",
@@ -25,12 +24,12 @@ class AlipayPocket {
             'app_id' => "2014080800007590"
         );
 
-        $this->as = new \Org\Alipay\AlipaySign();
-        $this->gw = new \Org\Alipay\Gateway();
-        $this->push = new \Org\Alipay\PushMsg();
+        $this->as = new AlipaySign();
+        $this->gw = new Gateway();
+        $this->push = new PushMsg();
 
-        $this->httprequest = new \Org\Alipay\HttpRequest();
-        $this->aop = new \Org\Alipay\aop\AopClient ();
+        $this->httprequest = new HttpRequest();
+        $this->aop = new AopClient ();
         $this->aop->appId = $this->config['app_id'];
         $this->aop->rsaPrivateKeyFilePath = $this->config['merchant_private_key_file'];
     }
@@ -106,12 +105,12 @@ class AlipayPocket {
 
         return $this->_receive;
     }
-    
+
     /**
      * 获取输入内容
      * @return type
      */
-    public function getContent(){
+    public function getContent() {
         return $this->getNode($this->getRev(), "Content");
     }
 
@@ -227,7 +226,7 @@ class AlipayPocket {
         $this->aop->rsaPrivateKeyFilePath = $this->config['merchant_private_key_file'];
         $access_token_obj = $this->aop->execute($tokenrequest);
         $access_token_response = $access_token_obj->alipay_system_oauth_token_response;
-        
+
         $access_token = $access_token_response->access_token; //访问令牌
         $expires_in = $access_token_response->expires_in; //访问令牌的有效时间，单位是秒
         return $access_token;
@@ -241,7 +240,7 @@ class AlipayPocket {
         $info = array();
         header("Content-Type:text/html;charset=utf-8");
         $access_token = $this->getAccessToken($auth_code);
-        $userinfo = new \Org\Alipay\aop\request\AlipayUserUserinfoShareRequest();
+        $userinfo = new AlipayUserUserinfoShareRequest();
         $_result = $this->aop->execute($userinfo, $access_token);
         $response = $_result->alipay_user_userinfo_share_response;
 
@@ -276,8 +275,8 @@ class AlipayPocket {
                 $_tmp['zip'] = $deliver_address->zip;
                 $info['deliver_address_list'][] = $_tmp;
 
-                $address = M("user_address")->where(array('address'=>$deliver_address->address))->find();
-                if(!$address){
+                $address = M("user_address")->where(array('address' => $deliver_address->address))->find();
+                if (!$address) {
                     $user = get_user_session();
                     $user_id = intval($user['id']);
                     $data['user_id'] = $user_id;
@@ -287,7 +286,7 @@ class AlipayPocket {
                     $address_id = M("user_address")->add($data);
                 }
             }
-       }
+        }
 
         return $info;
     }
@@ -311,7 +310,7 @@ class AlipayPocket {
      * @param type $content
      */
     public function log($content) {
-        file_put_contents("/www/web/default/fornet_zhifubao/log.txt", "\r\n内容：" . var_export($content, TRUE) . "\r\n", FILE_APPEND);
+        file_put_contents($this->log_path, "\r\n内容：" . var_export($content, TRUE) . "\r\n", FILE_APPEND);
     }
 
 }
